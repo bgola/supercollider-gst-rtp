@@ -1,0 +1,27 @@
+class:: GstRTPOut
+summary:: A simple gst out plugin
+related:: TODO
+categories:: UGens>TODO
+
+description::
+
+A simple gst out and in plugin
+
+
+classmethods::
+
+method::ar, kr
+
+argument::TODO
+
+argument::TODO
+
+
+examples::
+
+code::
+
+GstRTP.addOut(\key, 'host', 9999);
+{ GstRTPOut.ar(\key, SinOsc.ar() }.play;
+
+::
