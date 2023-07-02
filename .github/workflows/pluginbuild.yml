@@ -34,7 +34,7 @@ jobs:
     - name: Download gstreamer (Linux)
       if: runner.os != 'Windows' && matrix.arch != 'arm64'
       run: |
-        sudo apt-get install gstreamer-1.0 gstreamer-plugins-base
+        sudo apt-get install gstreamer-1.0 gstreamer1.0-plugins-base
 
       # Build
     - name: Create Build Environment
