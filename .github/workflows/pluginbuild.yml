@@ -1,0 +1,71 @@
+on:
+  push:
+    branches:
+      - 'main'
+
+jobs:
+  build:
+
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.name }}
+    strategy:
+      matrix:
+        include:
+
+          - name: 'Linux-x64'
+            os: ubuntu-latest
+
+    env:
+      SC_PATH: ${{ github.workspace }}/supercollider
+      INSTALL_PATH: ${{ github.workspace }}/build/Install
+      ARCHIVE_NAME: supercollider-gst-rtp-${{ matrix.name }}.zip
+
+    steps:
+    - name: Checkout GstRTP
+      uses: actions/checkout@v2
+
+    - name: Checkout SuperCollider
+      uses: actions/checkout@v2
+      with:
+        repository: supercollider/supercollider
+        path: ${{ env.SC_PATH }}
+        ref: main
+
+    - name: Download gstreamer (Linux)
+      if: runner.os != 'Windows' && matrix.arch != 'arm64'
+      run: |
+        sudo apt-get install gstreamer-1.0 gstreamer-plugins-base
+
+      # Build
+    - name: Create Build Environment
+      shell: bash
+      run: cmake -E make_directory $BUILD_PATH
+
+    - name: Configure CMake
+      shell: bash
+      working-directory: ${{ env.BUILD_PATH }}
+      run: cmake .. -DCMAKE_BUILD_TYPE='Release' -DSC_PATH="$SC_PATH" -DCMAKE_INSTALL_PREFIX="$INSTALL_PATH"
+
+    - name: Build
+      shell: bash
+      working-directory: ${{ env.BUILD_PATH }}
+      env:
+        CMAKE_BUILD_PARALLEL_LEVEL: 4
+      run: cmake --build . --config "Release" --target install
+
+      # Gather all files in a zip
+    - name: Zip up build (Unix)
+      if: runner.os != 'Windows'
+      shell: bash
+      working-directory: ${{ env.INSTALL_PATH }}
+      run: zip -r "$ARCHIVE_NAME" "GstRTP"
+
+      # Upload
+    - name: Upload binaries to release
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: ${{ env.INSTALL_PATH }}/${{ env.ARCHIVE_NAME }}
+        prerelease: true
+        body: ""
+        tag: ${{ github.ref }}
