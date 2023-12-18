@@ -246,7 +246,7 @@ void defineOutNetAddr(World *inWorld, void* inUserData, struct sc_msg_iter *args
     int key = args->geti(0);
     const char *addr = args->gets("");
     int port = args->geti(9999);
-    registryAddrs[key] = (char*)malloc(sizeof(&addr));
+    registryAddrs[key] = (char*)malloc(strlen(addr) + 1);
     strcpy(registryAddrs[key], addr);
     registryPorts[key] = port;
     registryStatus[key] = true;
