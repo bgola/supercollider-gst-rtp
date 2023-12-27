@@ -44,8 +44,8 @@ gst-launch-1.0 udpsrc port=9900 ! application/x-rtp, media=audio, encoding-name=
 
 Clone the project:
 
-    git clone https://github.com/bgola/gst
-    cd gst
+    git clone https://github.com/bgola/supercollider-gst-rtp
+    cd supercollider-gst-rtp
     mkdir build
     cd build
 
