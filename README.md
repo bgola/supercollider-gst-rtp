@@ -34,7 +34,7 @@ gst-launch-1.0 udpsrc port=9900 ! application/x-rtp, media=audio, encoding-name=
 
 ### Requirements
 
-- CMake >= 3.5
+- CMake >= 3.12
 - SuperCollider source code
 - gstreamer-1.0
 - gstreamer-app-1.0
