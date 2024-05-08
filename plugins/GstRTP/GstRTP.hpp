@@ -23,7 +23,7 @@ typedef struct _OutData {
     //GstBuffer *buffer;
 } GstRTPOutData;
 
-/*
+
 typedef struct _InData {
     GstElement *pipeline;
     GstElement *udpsrc;
@@ -38,7 +38,7 @@ typedef struct _InData {
     int size;
     bool allocd;
 } GstInData;
-*/
+
 
 
 namespace GstRTP {
@@ -60,7 +60,7 @@ private:
     // Member variables
 };
 
-/*
+
 class GstIn : public SCUnit {
 public:
     GstIn();
@@ -80,6 +80,6 @@ private:
     //GstElement *source;
     // Member variables
 };
-*/
+
 
 } // namespace GstRTP
