@@ -110,9 +110,27 @@ void GstRTPOut::next(int nSamples) {
 }
 
 
-/*
+
 GstIn::GstIn() {
     mCalcFunc = make_calc_function<GstIn, &GstIn::next>();
+
+    const float *chans = in(0);
+    const float *id = in(1);
+    int channels = *chans;
+    int key = *id;
+    if(!registryStatus[key]) {
+        Print("Warning: key %d was not initialized.\n", key);
+        return;
+    };
+
+    if(channels != 1 && channels != 2) {
+        Print("GstRTPOut input should be mono or stereo\n");
+        return;
+    };
+
+    char *addr = registryAddrs[key];
+    int port = registryPorts[key];
+ 
     data.allocd = false;
     // Create the main pipeline
     data.pipeline = gst_pipeline_new("audio-pipeline");
@@ -134,7 +152,7 @@ GstIn::GstIn() {
         NULL);
 
     // Set properties
-    g_object_set(G_OBJECT(data.udpsrc), "port", 9999, NULL);
+    g_object_set(G_OBJECT(data.udpsrc), "port", port, NULL);
     g_object_set(G_OBJECT(data.appsink), "caps",
                  gst_caps_new_simple("audio/x-raw",
                                      "format", G_TYPE_STRING, "F32LE",
@@ -185,7 +203,7 @@ GstIn::~GstIn() {
 }
 
 bool GstIn::get_buffer_data(int nSamples) {
-    GstSample* sample = gst_app_sink_try_pull_sample(GST_APP_SINK(data.appsink), 1000000);
+    GstSample* sample = gst_app_sink_try_pull_sample(GST_APP_SINK(data.appsink), 10);
     Unit* unit = (Unit*) this;
     if (sample) {
         if (data.allocd && data.bufIdx < ((data.size/sizeof(float))-nSamples)) {
@@ -234,9 +252,9 @@ void GstIn::next(int nSamples) {
         }
     }
 
-    if(noSamples) { Print("Warning: no data to read from gstreamer.\n"); };
+    //if(noSamples) { Print("Warning: no data to read from gstreamer.\n"); } else { Print("Got samples\n"); };
 }
-*/
+
 
 } // namespace GstRTP
 
@@ -254,13 +272,27 @@ void defineOutNetAddr(World *inWorld, void* inUserData, struct sc_msg_iter *args
     //Print("got define net out %s %s %d\n", key, addr, port);
 }
 
+void defineInNetAddr(World *inWorld, void* inUserData, struct sc_msg_iter *args, void *replyAddr) {
+	Print("Test!\n");
+    int key = args->geti(0);
+    const char *addr = args->gets("");
+    int port = args->geti(9999);
+    registryAddrs[key] = (char*)malloc(strlen(addr) + 1);
+    strcpy(registryAddrs[key], addr);
+    registryPorts[key] = port;
+    registryStatus[key] = true;
+    Print("%s:%d\n", registryAddrs[key], registryPorts[key]);
+    //Print("got define net out %s %s %d\n", key, addr, port);
+}
+
 //void defineInNetAddr(World *inWorld, void* inUserData, struct sc_msg_iter *args, void *replyAddr) {}
 
 PluginLoad(GstRTPUGens) {
     // Plugin magic
     ft = inTable;
     registerUnit<GstRTP::GstRTPOut>(ft, "GstRTPOut", false);
-    //registerUnit<Gst::GstIn>(ft, "GstIn", false);
+    registerUnit<GstRTP::GstIn>(ft, "GstRTPIn", false);
     DefinePlugInCmd("/gstrtp_set_out", defineOutNetAddr, nullptr);
+    DefinePlugInCmd("/gstrtp_set_in", defineInNetAddr, nullptr);
     gst_init(0, NULL);
 }
