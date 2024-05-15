@@ -124,7 +124,7 @@ GstIn::GstIn() {
     };
 
     if(channels != 1 && channels != 2) {
-        Print("GstRTPOut input should be mono or stereo\n");
+        Print("GstRTPIn should be mono or stereo\n");
         return;
     };
 
@@ -141,7 +141,6 @@ GstIn::GstIn() {
     data.opusdec = gst_element_factory_make("opusdec", "opus-decoder");
     data.audioconvert = gst_element_factory_make("audioconvert", "audio-converter");
     data.appsink = gst_element_factory_make("appsink", "app-sink");
-    //data.appsink = gst_element_factory_make("pipewiresink", "pipewire-sink");
 
     // Create caps for RTP Opus depayloader
     GstCaps* caps = gst_caps_new_simple("application/x-rtp",
@@ -165,7 +164,7 @@ GstIn::GstIn() {
     // Add elements to the pipeline
     gst_bin_add_many(GST_BIN(data.pipeline), data.udpsrc, data.rtpopusdepay, data.opusdec, data.audioconvert, data.appsink, NULL);
    
-	// Link elements
+    // Link elements
     if (!gst_element_link_filtered(data.udpsrc, data.rtpopusdepay, caps)) {
         g_printerr("Failed to link udpsrc and rtpopusdepay");
     }
@@ -175,35 +174,33 @@ GstIn::GstIn() {
         g_printerr("Failed to link elements");
     }
 
-	//g_signal_connect(data.appsink, "new-sample", G_CALLBACK(new_sample_callback), this);
+    //g_signal_connect(data.appsink, "new-sample", G_CALLBACK(new_sample_callback), this);
 
     // Start the pipeline
     GstStateChangeReturn ret = gst_element_set_state(data.pipeline, GST_STATE_PLAYING);
     if (ret == GST_STATE_CHANGE_FAILURE) {
         g_printerr("Failed to start pipeline");
-        //return ;
+        return ;
     }
 
     //data.buffer = gst_buffer_new_allocate(NULL, 64 * sizeof(float), NULL);
     //if(data.buffer == NULL) {
     //    Print("FAILED TO ALLOC BUFFER\n");
     //}
-    Print("Done\n");
-
     next(1);
 }
 
 GstIn::~GstIn() {
-	if (data.allocd) { 
-        //RTFree(unit->mWorld, (gpointer*)data.dest); 
+    Unit* unit = (Unit*) this;
+    if (data.allocd) { 
+        RTFree(unit->mWorld, (gpointer*)data.dest);
         data.allocd = false;
     }
-    gst_buffer_unref(data.buffer);
     gst_object_unref(data.pipeline);
 }
 
 bool GstIn::get_buffer_data(int nSamples) {
-    GstSample* sample = gst_app_sink_try_pull_sample(GST_APP_SINK(data.appsink), 10);
+    GstSample* sample = gst_app_sink_try_pull_sample(GST_APP_SINK(data.appsink), 0);
     Unit* unit = (Unit*) this;
     if (sample) {
         if (data.allocd && data.bufIdx < ((data.size/sizeof(float))-nSamples)) {
@@ -222,7 +219,6 @@ bool GstIn::get_buffer_data(int nSamples) {
             data.bufIdx = 0;
             
             gst_buffer_extract(buffer, 0, (gpointer*)data.dest, data.size);
-            //gst_buffer_unmap(buffer, &map);
             gst_sample_unref(sample);
             return true;
         }
@@ -269,11 +265,9 @@ void defineOutNetAddr(World *inWorld, void* inUserData, struct sc_msg_iter *args
     registryPorts[key] = port;
     registryStatus[key] = true;
     Print("%s:%d\n", registryAddrs[key], registryPorts[key]);
-    //Print("got define net out %s %s %d\n", key, addr, port);
 }
 
 void defineInNetAddr(World *inWorld, void* inUserData, struct sc_msg_iter *args, void *replyAddr) {
-	Print("Test!\n");
     int key = args->geti(0);
     const char *addr = args->gets("");
     int port = args->geti(9999);
@@ -282,7 +276,6 @@ void defineInNetAddr(World *inWorld, void* inUserData, struct sc_msg_iter *args,
     registryPorts[key] = port;
     registryStatus[key] = true;
     Print("%s:%d\n", registryAddrs[key], registryPorts[key]);
-    //Print("got define net out %s %s %d\n", key, addr, port);
 }
 
 //void defineInNetAddr(World *inWorld, void* inUserData, struct sc_msg_iter *args, void *replyAddr) {}
