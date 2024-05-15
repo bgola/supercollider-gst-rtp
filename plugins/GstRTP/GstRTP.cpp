@@ -222,7 +222,7 @@ bool GstIn::get_buffer_data(int nSamples) {
             gst_sample_unref(sample);
             return true;
         }
-    }
+    } 
     return false;
 }
 
@@ -236,6 +236,7 @@ void GstIn::next(int nSamples) {
             data.bufIdx++;
         } else {
             if (!get_buffer_data(nSamples)) {
+		Print("No samples!\n");
                 noSamples = true;
                 if (i > 0) {
                     outbuf[i] = outbuf[i-1];
@@ -248,7 +249,7 @@ void GstIn::next(int nSamples) {
         }
     }
 
-    //if(noSamples) { Print("Warning: no data to read from gstreamer.\n"); } else { Print("Got samples\n"); };
+    //if(noSamples) { Print("Warning: no data to read from gstreamer.\n"); };
 }
 
 
