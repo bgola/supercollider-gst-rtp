@@ -66,18 +66,30 @@ GstRTPOut::GstRTPOut() {
         !gst_element_link(data.convert, data.encoder) ||
         !gst_element_link(data.encoder, data.pay) ||
         !gst_element_link(data.pay, data.sink)) {
-        g_printerr("Failed to link elements in the pipeline\n");
+        Print("Failed to link elements in the pipeline\n");
         gst_object_unref(data.pipeline);
         return;
     }
 
+    
     // Start playing
-    gst_element_set_state(data.pipeline, GST_STATE_PLAYING);
-
+    GstStateChangeReturn ret = gst_element_set_state(data.pipeline, GST_STATE_PLAYING);
+    if (ret == GST_STATE_CHANGE_FAILURE) {
+        Print("Failed to start GstRTPOut pipeline");
+        return ;
+    }
+ 
     next(1);
 }
 
 GstRTPOut::~GstRTPOut() {
+    gst_element_set_state(data.pipeline, GST_STATE_NULL);
+ 
+    gst_object_unref(data.src);
+    gst_object_unref(data.encoder);
+    gst_object_unref(data.convert);
+    gst_object_unref(data.pay);
+    gst_object_unref(data.sink);
     gst_object_unref(data.pipeline);
 }
 
@@ -110,9 +122,27 @@ void GstRTPOut::next(int nSamples) {
 }
 
 
-/*
+
 GstIn::GstIn() {
     mCalcFunc = make_calc_function<GstIn, &GstIn::next>();
+
+    const float *chans = in(0);
+    const float *id = in(1);
+    int channels = *chans;
+    int key = *id;
+    if(!registryStatus[key]) {
+        Print("Warning: key %d was not initialized.\n", key);
+        return;
+    };
+
+    if(channels != 1 && channels != 2) {
+        Print("GstRTPIn should be mono or stereo\n");
+        return;
+    };
+
+    //char *addr = registryAddrs[key];
+    int port = registryPorts[key];
+ 
     data.allocd = false;
     // Create the main pipeline
     data.pipeline = gst_pipeline_new("audio-pipeline");
@@ -123,7 +153,6 @@ GstIn::GstIn() {
     data.opusdec = gst_element_factory_make("opusdec", "opus-decoder");
     data.audioconvert = gst_element_factory_make("audioconvert", "audio-converter");
     data.appsink = gst_element_factory_make("appsink", "app-sink");
-    //data.appsink = gst_element_factory_make("pipewiresink", "pipewire-sink");
 
     // Create caps for RTP Opus depayloader
     GstCaps* caps = gst_caps_new_simple("application/x-rtp",
@@ -134,7 +163,7 @@ GstIn::GstIn() {
         NULL);
 
     // Set properties
-    g_object_set(G_OBJECT(data.udpsrc), "port", 9999, NULL);
+    g_object_set(G_OBJECT(data.udpsrc), "port", port, NULL);
     g_object_set(G_OBJECT(data.appsink), "caps",
                  gst_caps_new_simple("audio/x-raw",
                                      "format", G_TYPE_STRING, "F32LE",
@@ -145,47 +174,55 @@ GstIn::GstIn() {
                                      NULL), NULL);
 
     // Add elements to the pipeline
-    gst_bin_add_many(GST_BIN(data.pipeline), data.udpsrc, data.rtpopusdepay, data.opusdec, data.audioconvert, data.appsink, NULL);
+    gst_bin_add_many(GST_BIN(data.pipeline), 
+		    data.udpsrc, data.rtpopusdepay, data.opusdec, 
+		    data.audioconvert, data.appsink, NULL);
    
-	// Link elements
+    // Link elements
     if (!gst_element_link_filtered(data.udpsrc, data.rtpopusdepay, caps)) {
-        g_printerr("Failed to link udpsrc and rtpopusdepay");
+        Print("Failed to link udpsrc and rtpopusdepay");
     }
+    g_object_unref(caps);
+
     if (!gst_element_link(data.rtpopusdepay, data.opusdec) ||
         !gst_element_link(data.opusdec, data.audioconvert) ||
         !gst_element_link(data.audioconvert, data.appsink)) {
-        g_printerr("Failed to link elements");
+        Print("Failed to link elements");
     }
-
-	//g_signal_connect(data.appsink, "new-sample", G_CALLBACK(new_sample_callback), this);
 
     // Start the pipeline
     GstStateChangeReturn ret = gst_element_set_state(data.pipeline, GST_STATE_PLAYING);
     if (ret == GST_STATE_CHANGE_FAILURE) {
-        g_printerr("Failed to start pipeline");
-        //return ;
+        Print("Failed to start pipeline");
+        return ;
     }
-
-    //data.buffer = gst_buffer_new_allocate(NULL, 64 * sizeof(float), NULL);
-    //if(data.buffer == NULL) {
-    //    Print("FAILED TO ALLOC BUFFER\n");
-    //}
-    Print("Done\n");
-
+    
     next(1);
 }
 
 GstIn::~GstIn() {
-	if (data.allocd) { 
-        //RTFree(unit->mWorld, (gpointer*)data.dest); 
+    Unit* unit = (Unit*) this;
+    if (data.allocd) { 
+        RTFree(unit->mWorld, (gpointer*)data.dest);
         data.allocd = false;
     }
-    gst_buffer_unref(data.buffer);
+    
+    GstStateChangeReturn ret = gst_element_set_state(data.pipeline, GST_STATE_NULL);
+    if (ret == GST_STATE_CHANGE_FAILURE) {
+        Print("Failed to stop GstRTPIn pipeline");
+        return ;
+    }
+ 
+    gst_object_unref(data.udpsrc);
+    gst_object_unref(data.rtpopusdepay);
+    gst_object_unref(data.opusdec);
+    gst_object_unref(data.audioconvert);
+    gst_object_unref(data.appsink);
     gst_object_unref(data.pipeline);
 }
 
 bool GstIn::get_buffer_data(int nSamples) {
-    GstSample* sample = gst_app_sink_try_pull_sample(GST_APP_SINK(data.appsink), 1000000);
+    GstSample* sample = gst_app_sink_try_pull_sample(GST_APP_SINK(data.appsink), 0);
     Unit* unit = (Unit*) this;
     if (sample) {
         if (data.allocd && data.bufIdx < ((data.size/sizeof(float))-nSamples)) {
@@ -204,11 +241,10 @@ bool GstIn::get_buffer_data(int nSamples) {
             data.bufIdx = 0;
             
             gst_buffer_extract(buffer, 0, (gpointer*)data.dest, data.size);
-            //gst_buffer_unmap(buffer, &map);
             gst_sample_unref(sample);
             return true;
         }
-    }
+    } 
     return false;
 }
 
@@ -221,6 +257,8 @@ void GstIn::next(int nSamples) {
             outbuf[i] = data.dest[data.bufIdx];
             data.bufIdx++;
         } else {
+	    // Done reading the last buffer
+	    // tries to get a new buffer with new samples
             if (!get_buffer_data(nSamples)) {
                 noSamples = true;
                 if (i > 0) {
@@ -229,6 +267,8 @@ void GstIn::next(int nSamples) {
                     outbuf[i] = 0.0;
                 }
             } else {
+		// Sucessfully got new samples, so go back one iteration of the loop
+		// so we can read the samples into the output buffer
                 i = i - 1;
             }
         }
@@ -236,7 +276,7 @@ void GstIn::next(int nSamples) {
 
     if(noSamples) { Print("Warning: no data to read from gstreamer.\n"); };
 }
-*/
+
 
 } // namespace GstRTP
 
@@ -251,7 +291,17 @@ void defineOutNetAddr(World *inWorld, void* inUserData, struct sc_msg_iter *args
     registryPorts[key] = port;
     registryStatus[key] = true;
     Print("%s:%d\n", registryAddrs[key], registryPorts[key]);
-    //Print("got define net out %s %s %d\n", key, addr, port);
+}
+
+void defineInNetAddr(World *inWorld, void* inUserData, struct sc_msg_iter *args, void *replyAddr) {
+    int key = args->geti(0);
+    const char *addr = args->gets("");
+    int port = args->geti(9999);
+    registryAddrs[key] = (char*)malloc(strlen(addr) + 1);
+    strcpy(registryAddrs[key], addr);
+    registryPorts[key] = port;
+    registryStatus[key] = true;
+    Print("%s:%d\n", registryAddrs[key], registryPorts[key]);
 }
 
 //void defineInNetAddr(World *inWorld, void* inUserData, struct sc_msg_iter *args, void *replyAddr) {}
@@ -260,7 +310,8 @@ PluginLoad(GstRTPUGens) {
     // Plugin magic
     ft = inTable;
     registerUnit<GstRTP::GstRTPOut>(ft, "GstRTPOut", false);
-    //registerUnit<Gst::GstIn>(ft, "GstIn", false);
+    registerUnit<GstRTP::GstIn>(ft, "GstRTPIn", false);
     DefinePlugInCmd("/gstrtp_set_out", defineOutNetAddr, nullptr);
+    DefinePlugInCmd("/gstrtp_set_in", defineInNetAddr, nullptr);
     gst_init(0, NULL);
 }

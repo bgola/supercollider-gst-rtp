@@ -20,10 +20,9 @@ typedef struct _OutData {
     GstElement *pay;
     GstElement *sink;
     GstCaps *caps;
-    //GstBuffer *buffer;
 } GstRTPOutData;
 
-/*
+
 typedef struct _InData {
     GstElement *pipeline;
     GstElement *udpsrc;
@@ -32,13 +31,13 @@ typedef struct _InData {
     GstElement *audioconvert;
     GstElement *appsink;
     GstCaps *caps;
-    GstBuffer *buffer;
+    // GstBuffer *buffer;
     int bufIdx;
     float *dest;
     int size;
     bool allocd;
 } GstInData;
-*/
+
 
 
 namespace GstRTP {
@@ -60,12 +59,11 @@ private:
     // Member variables
 };
 
-/*
+
 class GstIn : public SCUnit {
 public:
     GstIn();
 
-    // Destructor
     ~GstIn();
 
 private:
@@ -75,11 +73,7 @@ private:
 
     GstInData data;
     bool get_buffer_data(int nSamples);
-
-    //GstBuffer *buffer;
-    //GstElement *source;
-    // Member variables
 };
-*/
+
 
 } // namespace GstRTP
