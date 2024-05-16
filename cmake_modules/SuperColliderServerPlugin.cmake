@@ -35,6 +35,21 @@ function(sc_add_server_plugin_properties target is_supernova)
         PREFIX ""
     )
 
+    if(APPLE)
+        # on macOS "uname -m" returns the architecture (x86_64 or arm64)
+        execute_process(
+            COMMAND uname -m
+            RESULT_VARIABLE result
+            OUTPUT_VARIABLE OSX_NATIVE_ARCHITECTURE
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+        set(CMAKE_OSX_ARCHITECTURES "x86_64" CACHE STRING "")
+        if ((CMAKE_GENERATOR STREQUAL "Xcode")
+            AND (OSX_NATIVE_ARCHITECTURE STREQUAL "arm64"))
+                set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "")
+        endif()
+    endif()
+
     if(APPLE OR WIN32)
         set_target_properties(${target} PROPERTIES SUFFIX ".scx")
     endif()
