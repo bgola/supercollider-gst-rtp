@@ -43,26 +43,16 @@ function(sc_add_server_plugin_properties target is_supernova)
         ${SC_PATH}/include/plugin_interface
         ${SC_PATH}/include/common
         ${SC_PATH}/common
-        #/usr/include/gstreamer-1.0
-        #/usr/include/glib-2.0
-        #/usr/lib/glib-2.0/include
     )
 
-    #target_link_libraries(${target} gstapp-1.0)
-    #target_link_libraries(${target} gstreamer-1.0)
-    #target_link_libraries(${target} glib-2.0)
-
     pkg_check_modules(GST REQUIRED  glib-2.0>=2.4 
-    	     						gstreamer-1.0>=1.4
+                                    gstreamer-1.0>=1.4
                                     gstreamer-app-1.0>=1.4)
 
     target_include_directories(${target} PUBLIC ${GST_INCLUDE_DIRS})
-	#target_compile_options(${target} ${GST_CFLAGS})
+    target_link_directories(${target} PUBLIC ${GST_LIBRARY_DIRS})
     target_link_libraries(${target} PUBLIC ${GST_LIBRARIES})
     
-    #find_library(GSTREAMER GStreamer)
-    #target_link_libraries(${target} PUBLIC ${GSTREAMER})
-
     # from CompilerConfig module
     sc_config_compiler_flags(${target})
 
