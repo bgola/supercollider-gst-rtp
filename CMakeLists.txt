@@ -38,6 +38,16 @@ set(SC_PATH "${SC_PATH}" CACHE PATH
 include("${SC_PATH}/SCVersion.txt")
 message(STATUS "Building plugins for SuperCollider version: ${SC_VERSION}")
 
+if(APPLE)
+    execute_process(
+        COMMAND uname -m
+        RESULT_VARIABLE result
+        OUTPUT_VARIABLE OSX_NATIVE_ARCHITECTURE
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    set(CMAKE_OSX_ARCHITECTURES "${OSX_NATIVE_ARCHITECTURE}" CACHE STRING "")
+endif()
+
 # set project here to avoid SCVersion.txt clobbering our version info
 project(${project_name})
 sc_do_initial_compiler_config() # do after setting project so compiler ID is available
