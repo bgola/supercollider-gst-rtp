@@ -28,7 +28,7 @@ GstRTP {
 
 		while { map.values.includes(id) and: { max_tries > 0 } } { id = 99999.rand; max_tries = max_tries - 1; };
 		map[key] = id;
-		server.sendMsg('/cmd', '/gstrtp_set_in', id, "localhost", port);
+		server.sendMsg('/cmd', '/gstrtp_set_in', id, "0.0.0.0", port);
         }
 
 	*at { arg key;

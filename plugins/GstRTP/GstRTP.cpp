@@ -66,18 +66,30 @@ GstRTPOut::GstRTPOut() {
         !gst_element_link(data.convert, data.encoder) ||
         !gst_element_link(data.encoder, data.pay) ||
         !gst_element_link(data.pay, data.sink)) {
-        g_printerr("Failed to link elements in the pipeline\n");
+        Print("Failed to link elements in the pipeline\n");
         gst_object_unref(data.pipeline);
         return;
     }
 
+    
     // Start playing
-    gst_element_set_state(data.pipeline, GST_STATE_PLAYING);
-
+    GstStateChangeReturn ret = gst_element_set_state(data.pipeline, GST_STATE_PLAYING);
+    if (ret == GST_STATE_CHANGE_FAILURE) {
+        Print("Failed to start GstRTPOut pipeline");
+        return ;
+    }
+ 
     next(1);
 }
 
 GstRTPOut::~GstRTPOut() {
+    gst_element_set_state(data.pipeline, GST_STATE_NULL);
+ 
+    gst_object_unref(data.src);
+    gst_object_unref(data.encoder);
+    gst_object_unref(data.convert);
+    gst_object_unref(data.pay);
+    gst_object_unref(data.sink);
     gst_object_unref(data.pipeline);
 }
 
@@ -128,7 +140,7 @@ GstIn::GstIn() {
         return;
     };
 
-    char *addr = registryAddrs[key];
+    //char *addr = registryAddrs[key];
     int port = registryPorts[key];
  
     data.allocd = false;
@@ -162,31 +174,29 @@ GstIn::GstIn() {
                                      NULL), NULL);
 
     // Add elements to the pipeline
-    gst_bin_add_many(GST_BIN(data.pipeline), data.udpsrc, data.rtpopusdepay, data.opusdec, data.audioconvert, data.appsink, NULL);
+    gst_bin_add_many(GST_BIN(data.pipeline), 
+		    data.udpsrc, data.rtpopusdepay, data.opusdec, 
+		    data.audioconvert, data.appsink, NULL);
    
     // Link elements
     if (!gst_element_link_filtered(data.udpsrc, data.rtpopusdepay, caps)) {
-        g_printerr("Failed to link udpsrc and rtpopusdepay");
+        Print("Failed to link udpsrc and rtpopusdepay");
     }
+    g_object_unref(caps);
+
     if (!gst_element_link(data.rtpopusdepay, data.opusdec) ||
         !gst_element_link(data.opusdec, data.audioconvert) ||
         !gst_element_link(data.audioconvert, data.appsink)) {
-        g_printerr("Failed to link elements");
+        Print("Failed to link elements");
     }
-
-    //g_signal_connect(data.appsink, "new-sample", G_CALLBACK(new_sample_callback), this);
 
     // Start the pipeline
     GstStateChangeReturn ret = gst_element_set_state(data.pipeline, GST_STATE_PLAYING);
     if (ret == GST_STATE_CHANGE_FAILURE) {
-        g_printerr("Failed to start pipeline");
+        Print("Failed to start pipeline");
         return ;
     }
-
-    //data.buffer = gst_buffer_new_allocate(NULL, 64 * sizeof(float), NULL);
-    //if(data.buffer == NULL) {
-    //    Print("FAILED TO ALLOC BUFFER\n");
-    //}
+    
     next(1);
 }
 
@@ -196,6 +206,18 @@ GstIn::~GstIn() {
         RTFree(unit->mWorld, (gpointer*)data.dest);
         data.allocd = false;
     }
+    
+    GstStateChangeReturn ret = gst_element_set_state(data.pipeline, GST_STATE_NULL);
+    if (ret == GST_STATE_CHANGE_FAILURE) {
+        Print("Failed to stop GstRTPIn pipeline");
+        return ;
+    }
+ 
+    gst_object_unref(data.udpsrc);
+    gst_object_unref(data.rtpopusdepay);
+    gst_object_unref(data.opusdec);
+    gst_object_unref(data.audioconvert);
+    gst_object_unref(data.appsink);
     gst_object_unref(data.pipeline);
 }
 
@@ -235,8 +257,9 @@ void GstIn::next(int nSamples) {
             outbuf[i] = data.dest[data.bufIdx];
             data.bufIdx++;
         } else {
+	    // Done reading the last buffer
+	    // tries to get a new buffer with new samples
             if (!get_buffer_data(nSamples)) {
-		Print("No samples!\n");
                 noSamples = true;
                 if (i > 0) {
                     outbuf[i] = outbuf[i-1];
@@ -244,12 +267,14 @@ void GstIn::next(int nSamples) {
                     outbuf[i] = 0.0;
                 }
             } else {
+		// Sucessfully got new samples, so go back one iteration of the loop
+		// so we can read the samples into the output buffer
                 i = i - 1;
             }
         }
     }
 
-    //if(noSamples) { Print("Warning: no data to read from gstreamer.\n"); };
+    if(noSamples) { Print("Warning: no data to read from gstreamer.\n"); };
 }
 
 
