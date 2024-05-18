@@ -65,7 +65,7 @@ if (NOVA_SIMD)
 	include_directories(${SC_PATH}/external_libraries/nova-simd)
 endif()
 
-#find_package(PkgConfig)
+find_package(PkgConfig)
 
 ####################################################################################################
 # Begin target GstRTP

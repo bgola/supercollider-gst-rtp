@@ -58,7 +58,7 @@ jobs:
 
     - name: Download gstreamer (Windows)
       if: runner.os == 'Windows'
-      run: choco install gstreamer gstreamer-devel
+      run: choco install gstreamer gstreamer-devel pkgconfiglite
 
       # Build
     - name: Create Build Environment
