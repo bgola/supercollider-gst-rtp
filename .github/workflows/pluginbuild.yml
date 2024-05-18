@@ -40,13 +40,15 @@ jobs:
         path: ${{ env.SC_PATH }}
         ref: main
 
-    - name: Download gstreamer 
+    - name: Download gstreamer (Linux)
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update -y
         sudo apt-get install -y -f libopus0
         sudo apt-get install libunwind-dev
         sudo apt-get install -y -f gstreamer-1.0 gstreamer1.0-plugins-base libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
+      
+    - name: Download gstreamer (macOS)
       if: runner.os == 'macOS'
       run: brew install gstreamer
 
