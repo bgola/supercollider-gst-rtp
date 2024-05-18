@@ -12,9 +12,16 @@ jobs:
     strategy:
       matrix:
         include:
-
           - name: 'Linux-x64'
             os: ubuntu-latest
+
+          - name: 'macOS-x64'
+            arch: x86-64
+            os: macos-12
+
+          - name: 'macOS-arm64'
+            arch: arm64
+            os: macos-12
 
     env:
       SC_PATH: ${{ github.workspace }}/supercollider
@@ -33,13 +40,15 @@ jobs:
         path: ${{ env.SC_PATH }}
         ref: main
 
-    - name: Download gstreamer (Linux)
-      if: runner.os != 'Windows' && matrix.arch != 'arm64'
+    - name: Download gstreamer 
+      if: runner.os == 'Linux'
       run: |
         sudo apt-get update -y
         sudo apt-get install -y -f libopus0
         sudo apt-get install libunwind-dev
         sudo apt-get install -y -f gstreamer-1.0 gstreamer1.0-plugins-base libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
+      if: runner.os == 'macOS'
+      run: brew install gstreamer
 
       # Build
     - name: Create Build Environment
