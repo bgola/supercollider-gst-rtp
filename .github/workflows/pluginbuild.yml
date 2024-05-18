@@ -17,11 +17,15 @@ jobs:
 
           - name: 'macOS-x64'
             arch: x86-64
-            os: macos-12
+            os: macos-latest
 
           - name: 'macOS-arm64'
             arch: arm64
-            os: macos-12
+            os: macos-latest
+
+          - name: 'Windows-x64'
+            arch: x86-64
+            os: windows-latest
 
     env:
       SC_PATH: ${{ github.workspace }}/supercollider
@@ -51,6 +55,10 @@ jobs:
     - name: Download gstreamer (macOS)
       if: runner.os == 'macOS'
       run: brew install gstreamer
+
+    - name: Download gstreamer (Windows)
+      if: runner.os == 'Windows'
+      run: choco install gstreamer gstreamer-devel
 
       # Build
     - name: Create Build Environment
