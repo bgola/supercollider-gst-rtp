@@ -65,45 +65,7 @@ if (NOVA_SIMD)
 	include_directories(${SC_PATH}/external_libraries/nova-simd)
 endif()
 
-find_package(PkgConfig)
-
-#find_package(GStreamer REQUIRED)
-
-#find_library(CUSTOM_GLIB NAMES glib-2.0 PATHS "${CMAKE_PREFIX_PATH}")
-#find_library(CUSTOM_GSTREAMER NAMES gstreamer-1.0 PATHS "${CMAKE_PREFIX_PATH}")
-#find_library(CUSTOM_GSTREAMER_APP NAMES gstreamer-app-1.0 PATHS "${CMAKE_PREFIX_PATH}")
-
-#if (CUSTOM_GSTREAMER)
-#  set(GSTREAMER_SO "")
-#  if (LINUX)
-#    file(GLOB GSTREAMER_SO
-#      "${GSTREAMER_INSTALL_PREFIX}/lib/libgst.*"
-#      "${GSTREAMER_INSTALL_PREFIX}/lib/libgstapp.*"
-#      )
-#    set(CMAKE_INSTALL_RPATH "$ORIGIN/ignore")
-#  elseif (APPLE)
-#    file(GLOB GSTREAMER_SO "${GSTREAMER_INSTALL_PREFIX}/lib/*.dylib")
-#    set(CMAKE_INSTALL_RPATH "@loader_path/ignore")
-#  elseif (MSVC)
-#    file(GLOB GSTREAMER_SO "${GSTREAMER_INSTALL_PREFIX}/lib/*.dll")
-#  endif()
-#
-#  if (TORCH_SO)
-#    message("> FOUND custom GStreamer, libraries will be copied: " "${TORCH_SO}")
-#    install(FILES ${TORCH_SO} DESTINATION "${dest_dir}/ignore")
-#  endif()
-#endif()
-
-#pkg_search_module(GLIB REQUIRED glib-2.0) 
-#pkg_check_modules(GSTREAMER REQUIRED gstreamer-1.0)
-#pkg_check_modules(GSTREAMER REQUIRED gstreamer-app-1.0)
-
-#pkg_check_modules(GST REQUIRED glib-2.0>=2.4
-#                           gstreamer-1.0>=1.4
-#                            gstreamer-app-1.0>=1.4)
-
-#target_include_directories("GstRTP" PUBLIC ${GST_INCLUDE_DIRS})
-#target_link_libraries("GstRTP" PUBLIC ${GST_LIBRARIES})
+#find_package(PkgConfig)
 
 ####################################################################################################
 # Begin target GstRTP
