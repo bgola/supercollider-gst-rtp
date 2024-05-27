@@ -58,9 +58,9 @@ function(sc_add_server_plugin_properties target is_supernova)
     endif()
 
     if (WIN32)
-        target_include_directories(${target} PUBLIC "C:\gstreamer\1.0\msvc_x86_84\include")
-        target_link_directories(${target} PUBLIC "C:\gstreamer\1.0\msvc_x86_84\lib")
-        target_link_libraries(${target} PUBLIC "C:\gstreamer\1.0\msvc_x86_84\lib")
+        target_include_directories(${target} PUBLIC C:\gstreamer\1.0\msvc_x86_84\include)
+        target_link_directories(${target} PUBLIC C:\gstreamer\1.0\msvc_x86_84\lib)
+        target_link_libraries(${target} PUBLIC C:\gstreamer\1.0\msvc_x86_84\lib)
     endif()
 
     # from CompilerConfig module
