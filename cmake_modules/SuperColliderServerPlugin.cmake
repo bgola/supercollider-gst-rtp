@@ -46,7 +46,7 @@ function(sc_add_server_plugin_properties target is_supernova)
     )
 
 
-    if (APPLE OR LINUX) find_package(PkgConfig)
+    if (APPLE OR LINUX)
         find_package(PkgConfig)
         pkg_check_modules(GST REQUIRED  glib-2.0>=2.4 
                                         gstreamer-1.0>=1.4
