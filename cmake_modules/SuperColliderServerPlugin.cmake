@@ -45,14 +45,24 @@ function(sc_add_server_plugin_properties target is_supernova)
         ${SC_PATH}/common
     )
 
-    pkg_check_modules(GST REQUIRED  glib-2.0>=2.4 
-                                    gstreamer-1.0>=1.4
-                                    gstreamer-app-1.0>=1.4)
 
-    target_include_directories(${target} PUBLIC ${GST_INCLUDE_DIRS})
-    target_link_directories(${target} PUBLIC ${GST_LIBRARY_DIRS})
-    target_link_libraries(${target} PUBLIC ${GST_LIBRARIES})
-    
+    if (APPLE OR LINUX) find_package(PkgConfig)
+        find_package(PkgConfig)
+        pkg_check_modules(GST REQUIRED  glib-2.0>=2.4 
+                                        gstreamer-1.0>=1.4
+                                        gstreamer-app-1.0>=1.4)
+
+        target_include_directories(${target} PUBLIC ${GST_INCLUDE_DIRS})
+        target_link_directories(${target} PUBLIC ${GST_LIBRARY_DIRS})
+        target_link_libraries(${target} PUBLIC ${GST_LIBRARIES})
+    endif()
+
+    if (WIN32)
+        target_include_directories(${target} PUBLIC "C:\gstreamer\1.0\msvc_x86_84\include")
+        target_link_directories(${target} PUBLIC "C:\gstreamer\1.0\msvc_x86_84\lib")
+        target_link_libraries(${target} PUBLIC "C:\gstreamer\1.0\msvc_x86_84\lib")
+    endif()
+
     # from CompilerConfig module
     sc_config_compiler_flags(${target})
 
