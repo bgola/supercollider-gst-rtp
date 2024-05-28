@@ -89,7 +89,7 @@ jobs:
       if: runner.os == 'Windows'
       shell: bash
       working-directory: ${{ env.INSTALL_PATH }}
-      run: 7z a "$ARCHIVE_NAME" -tzip "nn.ar"
+      run: 7z a "$ARCHIVE_NAME" -tzip "GstRTP"
 
       # Upload
     - name: Upload binaries to release
