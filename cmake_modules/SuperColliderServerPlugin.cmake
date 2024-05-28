@@ -40,7 +40,7 @@ function(sc_add_server_plugin_properties target is_supernova)
     endif()
 
     if(WIN32)
-	set(ENV{PKG_CONFIG_PATH} "C:/gstreamer/1.0/msvc_x86_64/lib/pkgconfig/")
+	    set(ENV{PKG_CONFIG_PATH} $ENV{WIN_GSTREAMER_PATH}/msvc_x86_64/lib/pkgconfig/)
     endif()
 
     target_include_directories(${target} PUBLIC

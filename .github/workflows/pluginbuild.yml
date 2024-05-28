@@ -29,6 +29,7 @@ jobs:
 
     env:
       SC_PATH: ${{ github.workspace }}/supercollider
+      WIN_GSTREAMER_PATH: "D:/gstreamer/1.0"
       INSTALL_PATH: ${{ github.workspace }}/build/Install
       BUILD_PATH: ${{ github.workspace }}/build
       ARCHIVE_NAME: supercollider-gst-rtp-${{ matrix.name }}.zip
